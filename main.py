@@ -4,6 +4,19 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import pandas as pd
 import sys
+import os
+
+import bookmark
+
+ID_path = os.getcwd() + '\\kakaomap_auto_bookmark\\src\\ID.txt'
+PASS_path = os.getcwd() + '\\kakaomap_auto_bookmark\\src\\PASS.txt'
+
+def read(path):
+    with open(path, 'r') as file:
+        return file.read()
+def write(path, text):
+    with open(path, 'w') as file:
+        file.write(text)
 
 def check_file(path):
     df = None
@@ -11,31 +24,33 @@ def check_file(path):
         df = pd.read_excel(path, sheet_name=0, engine='openpyxl')
     except:
         print('FILE ERROR::file import error')
-        return False
+        return 0
     
     if len(df.columns) != 4:
         print('FILE ERROR::data column size is not 4')
-        return False
+        return 0
     
     for index, row in df.iterrows():
         for col in range(4):
             if pd.isna(row.iloc[col]):
                 print(f'FILE ERROR::Row {index + 2}, Column {col + 1} is empty.')
-                return False
+                return 0
     
-    return True
+    return df.size // 4
 
 class Window(QWidget):
     def update_filePath(self, path):
-        if check_file(path):
+        size = check_file(path)
+        if size != 0:
             self.line_filepath.setText(path)
+            self.lbl_count.setText(f'<b>Count</b> : {str(size).zfill(3)}')
 
     def __init__(self):
         super().__init__()
         self.UIinit()
     
     def UIinit(self):
-        self.setFixedSize(500, 350) 
+        self.setFixedSize(500, 300) 
         self.setWindowTitle('Kakaomap Auto Bookmarking')
         grid = QGridLayout()
 
@@ -55,8 +70,8 @@ class Window(QWidget):
         hbox_ID_PASS = QHBoxLayout()
         lbl_ID = QLabel('ID : ', self)
         lbl_PASS = QLabel('Password : ', self)
-        self.line_ID = QLineEdit('', self)
-        self.line_PASS = QLineEdit('', self)
+        self.line_ID = QLineEdit(read(ID_path), self)
+        self.line_PASS = QLineEdit(read(PASS_path), self)
         self.line_PASS.setEchoMode(QLineEdit.Password)
         self.line_ID.setEnabled(False)
         self.line_PASS.setEnabled(False)
@@ -87,7 +102,7 @@ class Window(QWidget):
         self.line_filepath = QLineEdit(self)
         self.line_filepath.setReadOnly(True)
 
-        self.lbl_size = QLabel('SIZE : --', self)
+        self.lbl_count = QLabel('<b>Count</b> : ---', self)
 
         btn_selectFile = QPushButton('Import File (.excel)', self)
         btn_selectFile.clicked.connect(self.btn_selectFile_function)
@@ -97,7 +112,7 @@ class Window(QWidget):
 
         vbox = QVBoxLayout()
         vbox.addWidget(self.line_filepath)
-        vbox.addWidget(self.lbl_size)
+        vbox.addWidget(self.lbl_count)
         vbox.addLayout(hbox)
 
         groupbox.setLayout(vbox)
@@ -133,11 +148,13 @@ class Window(QWidget):
         self.line_ID.setEnabled(False)
         self.line_PASS.setEnabled(False)
         self.line_PASS.setEchoMode(QLineEdit.Password)
+        write(ID_path, self.line_ID.text())
+        write(PASS_path, self.line_PASS.text())
     def btn_selectFile_function(self):
         fname = QFileDialog.getOpenFileName(self, '파일선택', '', 'AllFiles(*.xlsx *.xls)')
         self.update_filePath(fname[0])
     def btn_start_function(self):
-        print('start')
+        bookmark.start(self.line_ID.text(), self.line_PASS.text(), color='red', filePath=self.line_filepath.text())
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

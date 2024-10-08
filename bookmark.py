@@ -31,10 +31,7 @@ xpath_input_search = '//*[@id="search.keyword.query"]'
 
 className_btn_menu = 'ico_toolbar'
 
-KAKAO_ID = '01044587759'
-KAKAO_PASS = 'rnrehdrbs1'
-
-def start(color):
+def start(KAKAO_ID, KAKAO_PASS, color, filePath):
     service = Service(ChromeDriverManager().install())
 
     driver = webdriver.Chrome(service=service)
