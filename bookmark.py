@@ -4,6 +4,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import pandas as pd
 import time
 
 url_kakao = 'https://map.kakao.com/'
@@ -53,11 +54,16 @@ def start(KAKAO_ID, KAKAO_PASS, color, filePath):
     def input(xpath, text):
         try:
             input_field = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, xpath)))
+            driver.execute_script("arguments[0].removeAttribute('readonly')", input_field)
             input_field.clear()
             input_field.send_keys(text)
             print(f'Input - {xpath}, {text}')
         except Exception as e:
             print(f'Input function failed :: {xpath}, {e}')
+
+    def input_detail(title, memo):
+        input('//*[@id="display1"]', title)
+        input('//*[@id="favMemo"]', memo)
 
     click(xpath_btn_loginPage, By.XPATH)
     input(xpath_input_ID, KAKAO_ID)
@@ -72,8 +78,8 @@ def start(KAKAO_ID, KAKAO_PASS, color, filePath):
     time.sleep(1)
 
     first = True
-    def bookmark(address):
-        global first
+    def bookmark(index, address, name, count):
+        nonlocal first
         input(xpath_input_search, address)
         click(xpath_btn_search, By.XPATH)
         if first:
@@ -82,14 +88,18 @@ def start(KAKAO_ID, KAKAO_PASS, color, filePath):
             first = False
         click(className_btn_menu, By.CLASS_NAME)
         click(xpath_btn_group1, By.XPATH)
+
+        input_detail(title=name, memo=f'{index}) {count} 장, {address}')
         click(xpath_btn_color[color], By.XPATH)
         click(xpath_btn_bookmark_enter, By.XPATH)
 
-    bookmark(address='경기 부천시 원미구 부천로 324')
-    bookmark(address='경기 부천시 원미구 부천로208번길 29')
-    bookmark(address='경기 부천시 원미구 부천로 342 부천시장애인직업재활시설')
-    bookmark(address='경기 부천시 원미구 도당동 산 25-5')
-    bookmark(address='경기 부천시 오정구 원종로93번길 39')
+    df = pd.read_excel(filePath, sheet_name=0, engine='openpyxl')
+    for _, row in df.iterrows():
+        index = str(row[0])
+        name = str(row[1])
+        address = str(row[2])
+        count = str(row[3])
+        bookmark(index, address, name, count)
 
     while True:
         pass

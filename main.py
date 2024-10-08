@@ -43,7 +43,7 @@ class Window(QWidget):
         size = check_file(path)
         if size != 0:
             self.line_filepath.setText(path)
-            self.lbl_count.setText(f'<b>Count</b> : {str(size).zfill(3)}')
+            self.lbl_count.setText(f'<b>Count : {str(size).zfill(3)}</b>')
 
     def __init__(self):
         super().__init__()
@@ -99,10 +99,12 @@ class Window(QWidget):
     def createGroup_file(self):
         groupbox = QGroupBox('File')
 
+        lbl_format_guid = QLabel('<b>EXCEL FORMAT : [index|Name|Address|Count]</b>', self)
+
         self.line_filepath = QLineEdit(self)
         self.line_filepath.setReadOnly(True)
 
-        self.lbl_count = QLabel('<b>Count</b> : ---', self)
+        self.lbl_count = QLabel('<b>Count : ---</b>', self)
 
         btn_selectFile = QPushButton('Import File (.excel)', self)
         btn_selectFile.clicked.connect(self.btn_selectFile_function)
@@ -111,6 +113,7 @@ class Window(QWidget):
         hbox.addWidget(btn_selectFile)
 
         vbox = QVBoxLayout()
+        vbox.addWidget(lbl_format_guid)
         vbox.addWidget(self.line_filepath)
         vbox.addWidget(self.lbl_count)
         vbox.addLayout(hbox)
