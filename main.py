@@ -3,6 +3,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import pandas as pd
+import openpyxl
 import sys
 import os
 
@@ -19,11 +20,10 @@ def write(path, text):
         file.write(text)
 
 def check_file(path):
-    df = None
     try:
         df = pd.read_excel(path, sheet_name=0, engine='openpyxl')
-    except:
-        print('FILE ERROR::file import error')
+    except Exception as e:
+        print(f'FILE ERROR::file import error - {e}')
         return 0
     
     if len(df.columns) != 4:
@@ -43,14 +43,14 @@ class Window(QWidget):
         size = check_file(path)
         if size != 0:
             self.line_filepath.setText(path)
-            self.lbl_count.setText(f'<b>Count : {str(size).zfill(3)}</b>')
+            self.lbl_count.setText(f'Count : {str(size).zfill(3)}')
 
     def __init__(self):
         super().__init__()
         self.UIinit()
     
     def UIinit(self):
-        self.setFixedSize(500, 300) 
+        self.setFixedSize(500, 340) 
         self.setWindowTitle('Kakaomap Auto Bookmarking')
         grid = QGridLayout()
 
@@ -104,7 +104,7 @@ class Window(QWidget):
         self.line_filepath = QLineEdit(self)
         self.line_filepath.setReadOnly(True)
 
-        self.lbl_count = QLabel('<b>Count : ---</b>', self)
+        self.lbl_count = QLabel('Count : ---', self)
 
         btn_selectFile = QPushButton('Import File (.excel)', self)
         btn_selectFile.clicked.connect(self.btn_selectFile_function)
@@ -126,11 +126,20 @@ class Window(QWidget):
         btn_start = QPushButton('Start', self)
         btn_start.clicked.connect(self.btn_start_function)
 
+        lbl_color = QLabel('Color', self)
+
+        self.cb_color = QComboBox(self)
+        for color in bookmark.color_List:
+            self.cb_color.addItem(str(color))
+        self.cb_color.setCurrentText(bookmark.color_List[0])
+
         hbox = QHBoxLayout()
-        hbox.addWidget(btn_start)
+        hbox.addWidget(lbl_color)
+        hbox.addWidget(self.cb_color)
 
         vbox = QVBoxLayout()
         vbox.addLayout(hbox)
+        vbox.addWidget(btn_start)
 
         groupbox.setLayout(vbox)
         return groupbox
@@ -157,7 +166,7 @@ class Window(QWidget):
         fname = QFileDialog.getOpenFileName(self, '파일선택', '', 'AllFiles(*.xlsx *.xls)')
         self.update_filePath(fname[0])
     def btn_start_function(self):
-        bookmark.start(self.line_ID.text(), self.line_PASS.text(), color='red', filePath=self.line_filepath.text())
+        bookmark.start(self.line_ID.text(), self.line_PASS.text(), color=self.cb_color.currentText(), filePath=self.line_filepath.text())
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

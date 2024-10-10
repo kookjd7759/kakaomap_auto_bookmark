@@ -15,14 +15,15 @@ xpath_btn_login = '//*[@id="mainContent"]/div/div/form/div[4]/button[1]'
 xpath_btn_search = '//*[@id="search.keyword.submit"]'
 xpath_btn_bookmark_banner = '/html/body/div[10]/div/div/div/span'
 xpath_btn_group1 = '/html/body/div[20]/div[2]/div[2]/ul/li[2]'
+color_List = ['red', 'yellow', 'orange', 'green', 'deep_green', 'purple', 'pink']
 xpath_btn_color = {
-    'red'        : '//*[@id="favoriteColor1"]',
-    'yellow'     : '//*[@id="favoriteColor2"]',
-    'orange'     : '//*[@id="favoriteColor3"]',
-    'green'      : '//*[@id="favoriteColor4"]',
-    'deep_green' : '//*[@id="favoriteColor5"]',
-    'purple'     : '//*[@id="favoriteColor6"]',
-    'pink'       : '//*[@id="favoriteColor7"]'
+    color_List[0] : '//*[@id="favoriteColor1"]',
+    color_List[1] : '//*[@id="favoriteColor2"]',
+    color_List[2] : '//*[@id="favoriteColor3"]',
+    color_List[3] : '//*[@id="favoriteColor4"]',
+    color_List[4] : '//*[@id="favoriteColor5"]',
+    color_List[5] : '//*[@id="favoriteColor6"]',
+    color_List[6] : '//*[@id="favoriteColor7"]'
 }
 xpath_btn_bookmark_enter = '/html/body/div[20]/div[3]/form/fieldset/div[3]/button'
 
@@ -88,8 +89,10 @@ def start(KAKAO_ID, KAKAO_PASS, color, filePath):
             first = False
         click(className_btn_menu, By.CLASS_NAME)
         click(xpath_btn_group1, By.XPATH)
+        title = f'({index}) {name}'
+        memo = f'{count} 장, {address}'
 
-        input_detail(title=name, memo=f'{index}) {count} 장, {address}')
+        input_detail(title, memo)
         click(xpath_btn_color[color], By.XPATH)
         click(xpath_btn_bookmark_enter, By.XPATH)
 
