@@ -4,8 +4,9 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import pandas as pd
+import os
 import time
+import pandas as pd
 
 url_kakao = 'https://map.kakao.com/'
 url_bookmark_request = 'https://map.kakao.com/favorite/add.json'
@@ -25,7 +26,6 @@ color_List = [
     'rgba(153, 129, 255, 1)', 
     'rgba(241, 121, 220, 1)', 
     ]
-
 def xpath_btn_color(idx):
     return f'//*[@id="favoriteColor{idx + 1}"]'
 xpath_btn_bookmark_enter = '/html/body/div[20]/div[3]/form/fieldset/div[3]/button'
@@ -37,6 +37,26 @@ xpath_input_search = '//*[@id="search.keyword.query"]'
 className_btn_menu = 'ico_toolbar'
 
 def start(KAKAO_ID, KAKAO_PASS, color_idx, filePath, group):
+    all = 0
+    success = 0
+    fail = 0
+    Failed_data = {
+        'Index': [],
+        'Name': [],
+        'Address': [],
+        'Count' : [],
+        'Log' : []
+    }
+    failed_size = 0
+    def append_failed(index, name, address, count, log):
+        nonlocal failed_size
+        failed_size += 1
+        Failed_data['Index'].append(index)
+        Failed_data['Name'].append(name)
+        Failed_data['Address'].append(address)
+        Failed_data['Count'].append(count)
+        Failed_data['Log'].append(log)
+
     service = Service(ChromeDriverManager().install())
 
     driver = webdriver.Chrome(service=service)
@@ -54,6 +74,7 @@ def start(KAKAO_ID, KAKAO_PASS, color_idx, filePath, group):
             print(f'Click - {src}')
         except Exception as e:
             print(f'Click function failed :: CAN\'T CLICKED - {src}, {e}')
+            return -1, -1, -1
 
     def input(xpath, text):
         try:
@@ -64,6 +85,7 @@ def start(KAKAO_ID, KAKAO_PASS, color_idx, filePath, group):
             print(f'Input - {xpath}, {text}')
         except Exception as e:
             print(f'Input function failed :: {xpath}, {e}')
+            return -1, -1, -1
 
     def input_detail(title, memo):
         input('//*[@id="display1"]', title)
@@ -80,23 +102,41 @@ def start(KAKAO_ID, KAKAO_PASS, color_idx, filePath, group):
     except Exception as e:
         print('Login error', e)
 
+    def isDuplicate():
+        try:
+            WebDriverWait(driver, 0.3).until(EC.visibility_of_element_located((By.CSS_SELECTOR, '.num.num1')))
+            return True
+        except:
+            return False
+    
     first = True
-    def bookmark(index, address, name, count):
+    def bookmark(index, name, address, count):
+        nonlocal all
+        nonlocal success
+        nonlocal fail
         nonlocal first
+        all += 1
         input(xpath_input_search, address)
         click(xpath_btn_search, By.XPATH)
         if first:
             print('first bookmarking on this excution')
             click(xpath_btn_bookmark_banner, By.XPATH)
             first = False
-        click(className_btn_menu, By.CLASS_NAME)
-        click(xpath_btn_group(group), By.XPATH)
-        title = f'({index}) {name}'
-        memo = f'{count} 장, {address}'
+        time.sleep(0.3)
+        if isDuplicate():
+            print('Duplicate !')
+            append_failed(index, name, address, count, '중복된 주소')
+            fail += 1
+        else:
+            click(className_btn_menu, By.CLASS_NAME)
+            click(xpath_btn_group(group), By.XPATH)
+            title = f'({index}) {name}'
+            memo = f'{count} 장, {address}'
 
-        input_detail(title, memo)
-        click(xpath_btn_color(color_idx), By.XPATH)
-        click(xpath_btn_bookmark_enter, By.XPATH)
+            input_detail(title, memo)
+            click(xpath_btn_color(color_idx), By.XPATH)
+            click(xpath_btn_bookmark_enter, By.XPATH)
+            success += 1
 
     df = pd.read_excel(filePath, sheet_name=0, engine='openpyxl')
     for _, row in df.iterrows():
@@ -104,10 +144,15 @@ def start(KAKAO_ID, KAKAO_PASS, color_idx, filePath, group):
         name = str(row[1])
         address = str(row[2])
         count = str(row[3])
-        bookmark(index, address, name, count)
+        bookmark(index, name, address, count)
 
-    while True:
-        pass
+    if failed_size != 0:
+        df = pd.DataFrame(Failed_data)
+        file_path = os.getcwd() + '\\kakaomap_auto_bookmark\\failed.xlsx'
+        df.to_excel(file_path, index=False, engine='openpyxl')
+
+    driver.close()
+    return all, success, fail
 
 if __name__ == '__main__':
-    start('01044587759', 'rnrehdrbs1', color_List[0], 'C:\\WorkSpace\\Visual Studio Code Workspace\\kakaomap_auto_bookmark\\test_bookmarkList(xlsx).xlsx')
+    start('01044587759', 'rnrehdrbs1', 0, 'C:\\WorkSpace\\Visual Studio Code Workspace\\kakaomap_auto_bookmark\\test_bookmarkList(xlsx).xlsx', 2)

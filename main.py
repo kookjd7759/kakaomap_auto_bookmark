@@ -38,9 +38,14 @@ class Warning(QDialog):
         super().__init__(parent)
         self.initUI(key)
     def initUI(self, key):
+        text = ''
+        if key == 'ID' or key == 'PASS':
+            text = f'Enter your {key}'
+        else: # key == FILE
+            text = f'Import excel file'
         self.setFixedSize(150, 100)
         self.setWindowTitle('Warning')
-        label = QLabel(self.text(key), self)
+        label = QLabel(text, self)
         label.setAlignment(Qt.AlignCenter)
 
         btn = QPushButton('Ok', self)
@@ -49,12 +54,6 @@ class Warning(QDialog):
         vbox.addWidget(label)
         vbox.addWidget(btn)
         self.setLayout(vbox)
-
-    def text(self, key):
-        if key == 'ID' or key == 'PASS':
-            return f'Enter your {key}'
-        else: # key == FILE
-            return f'Import excel file'
 
 class Window(QWidget):
     def update_filePath(self, path):
@@ -71,7 +70,7 @@ class Window(QWidget):
         super().__init__()
         self.UIinit()
     def UIinit(self):
-        self.setFixedSize(500, 380) 
+        self.setFixedSize(500, 440) 
         self.setWindowTitle('Kakaomap Auto Bookmarking')
         self.setWindowIcon(QIcon(ico_path))
         grid = QGridLayout()
@@ -79,10 +78,12 @@ class Window(QWidget):
         self.gb_loginInfo = self.createGroup_loginInfo()
         self.gb_file = self.createGroup_file()
         self.gb_execution = self.createGroup_execution()
+        self.gb_result = self.createGroup_result()
 
         grid.addWidget(self.gb_loginInfo, 0, 0)
         grid.addWidget(self.gb_file, 1, 0)
         grid.addWidget(self.gb_execution, 2, 0)
+        grid.addWidget(self.gb_result, 3, 0)
 
         self.setLayout(grid)
 
@@ -187,13 +188,39 @@ class Window(QWidget):
         hbox_group.addWidget(lbl_group)
         hbox_group.addWidget(self.cb_group)
 
-        lbl_warning_msg = QLabel('선택된 그룹에 이미 즐겨찾기가 존재하는 경우, 오류가 발생할 수 있습니다.', self)
-        lbl_warning_msg.setStyleSheet( 'QLabel { font-size: 12px; color: red; }')
         vbox = QVBoxLayout()
         vbox.addLayout(hbox_color)
         vbox.addLayout(hbox_group)
-        vbox.addWidget(lbl_warning_msg)
         vbox.addWidget(btn_start)
+
+        groupbox.setLayout(vbox)
+        return groupbox
+    def createGroup_result(self):
+        groupbox = QGroupBox('Result')
+
+        hbox = QHBoxLayout()
+        lbl_all = QLabel('All', self)
+        self.line_all = QLineEdit('', self)
+        self.line_all.setReadOnly(True)
+        lbl_success = QLabel('Success', self)
+        self.line_success = QLineEdit('', self)
+        self.line_success.setReadOnly(True)
+        lbl_fail = QLabel('Fail', self)
+        self.line_fail = QLineEdit('', self)
+        self.line_fail.setReadOnly(True)
+        self.line_result = QLineEdit('', self)
+        self.line_result.setReadOnly(True)
+        
+        hbox.addWidget(lbl_all)
+        hbox.addWidget(self.line_all)
+        hbox.addWidget(lbl_success)
+        hbox.addWidget(self.line_success)
+        hbox.addWidget(lbl_fail)
+        hbox.addWidget(self.line_fail)
+
+        vbox = QVBoxLayout()
+        vbox.addLayout(hbox)
+        vbox.addWidget(self.line_result)
 
         groupbox.setLayout(vbox)
         return groupbox
@@ -201,6 +228,8 @@ class Window(QWidget):
     def btn_edit_function(self):
         self.gb_file.setEnabled(False)
         self.gb_execution.setEnabled(False)
+        self.gb_result.setEnabled(False)
+
         self.btn_edit.setEnabled(False)
         self.btn_save.setEnabled(True)
         self.line_ID.setEnabled(True)
@@ -209,6 +238,8 @@ class Window(QWidget):
     def btn_save_function(self):
         self.gb_file.setEnabled(True)
         self.gb_execution.setEnabled(True)
+        self.gb_result.setEnabled(True)
+
         self.btn_edit.setEnabled(True)
         self.btn_save.setEnabled(False)
         self.line_ID.setEnabled(False)
@@ -221,10 +252,24 @@ class Window(QWidget):
         self.update_filePath(fname[0])
     def btn_start_function(self):
         if self.start_check() == '':
-            bookmark.start(self.line_ID.text(), self.line_PASS.text(), self.get_color(), self.line_filepath.text(), int(self.cb_group.currentText()))
+            self.start()
         else:
             warning = Warning(self, self.start_check())
             warning.exec_()
+
+    def start(self):
+            self.gb_loginInfo.setEnabled(False)
+            self.gb_file.setEnabled(False)
+            self.gb_execution.setEnabled(False)
+            all, suc, fail = bookmark.start(self.line_ID.text(), self.line_PASS.text(), self.get_color(), self.line_filepath.text(), int(self.cb_group.currentText()))
+            if all == -1:
+                self.line_result.setText('Error')
+            else:
+                self.line_result.setText('Complete')
+                self.line_all.setText(str(all))
+                self.line_success.setText(str(suc))
+                self.line_fail.setText(str(fail))
+
 
     def start_check(self):
         if self.line_ID.text() == '':
