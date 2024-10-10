@@ -14,7 +14,8 @@ xpath_btn_loginPage = '//*[@id="btnLogin"]'
 xpath_btn_login = '//*[@id="mainContent"]/div/div/form/div[4]/button[1]'
 xpath_btn_search = '//*[@id="search.keyword.submit"]'
 xpath_btn_bookmark_banner = '/html/body/div[10]/div/div/div/span'
-xpath_btn_group1 = '/html/body/div[20]/div[2]/div[2]/ul/li[2]'
+def xpath_btn_group(idx):
+    return f'/html/body/div[20]/div[2]/div[2]/ul/li[{idx + 1}]'
 color_List = [
     'rgba(255, 93, 94, 1)',
     'rgba(255, 179, 1, 1)', 
@@ -24,24 +25,18 @@ color_List = [
     'rgba(153, 129, 255, 1)', 
     'rgba(241, 121, 220, 1)', 
     ]
-xpath_btn_color = {
-    color_List[0] : '//*[@id="favoriteColor1"]',
-    color_List[1] : '//*[@id="favoriteColor2"]',
-    color_List[2] : '//*[@id="favoriteColor3"]',
-    color_List[3] : '//*[@id="favoriteColor4"]',
-    color_List[4] : '//*[@id="favoriteColor5"]',
-    color_List[5] : '//*[@id="favoriteColor6"]',
-    color_List[6] : '//*[@id="favoriteColor7"]'
-}
-xpath_btn_bookmark_enter = '/html/body/div[20]/div[3]/form/fieldset/div[3]/button'
 
+def xpath_btn_color(idx):
+    return f'//*[@id="favoriteColor{idx + 1}"]'
+xpath_btn_bookmark_enter = '/html/body/div[20]/div[3]/form/fieldset/div[3]/button'
+xpath_btn_my = '//*[@id="search.tab5"]'
 xpath_input_ID = '//*[@id="loginId--1"]'
 xpath_input_PASS = '//*[@id="password--2"]'
 xpath_input_search = '//*[@id="search.keyword.query"]'
 
 className_btn_menu = 'ico_toolbar'
 
-def start(KAKAO_ID, KAKAO_PASS, color, filePath):
+def start(KAKAO_ID, KAKAO_PASS, color_idx, filePath, group):
     service = Service(ChromeDriverManager().install())
 
     driver = webdriver.Chrome(service=service)
@@ -84,7 +79,6 @@ def start(KAKAO_ID, KAKAO_PASS, color, filePath):
         print('Login !')
     except Exception as e:
         print('Login error', e)
-    time.sleep(1)
 
     first = True
     def bookmark(index, address, name, count):
@@ -96,12 +90,12 @@ def start(KAKAO_ID, KAKAO_PASS, color, filePath):
             click(xpath_btn_bookmark_banner, By.XPATH)
             first = False
         click(className_btn_menu, By.CLASS_NAME)
-        click(xpath_btn_group1, By.XPATH)
+        click(xpath_btn_group(group), By.XPATH)
         title = f'({index}) {name}'
         memo = f'{count} 장, {address}'
 
         input_detail(title, memo)
-        click(xpath_btn_color[color], By.XPATH)
+        click(xpath_btn_color(color_idx), By.XPATH)
         click(xpath_btn_bookmark_enter, By.XPATH)
 
     df = pd.read_excel(filePath, sheet_name=0, engine='openpyxl')
@@ -114,3 +108,6 @@ def start(KAKAO_ID, KAKAO_PASS, color, filePath):
 
     while True:
         pass
+
+if __name__ == '__main__':
+    start('01044587759', 'rnrehdrbs1', color_List[0], 'C:\\WorkSpace\\Visual Studio Code Workspace\\kakaomap_auto_bookmark\\test_bookmarkList(xlsx).xlsx')
