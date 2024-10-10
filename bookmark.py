@@ -15,7 +15,15 @@ xpath_btn_login = '//*[@id="mainContent"]/div/div/form/div[4]/button[1]'
 xpath_btn_search = '//*[@id="search.keyword.submit"]'
 xpath_btn_bookmark_banner = '/html/body/div[10]/div/div/div/span'
 xpath_btn_group1 = '/html/body/div[20]/div[2]/div[2]/ul/li[2]'
-color_List = ['red', 'yellow', 'orange', 'green', 'deep_green', 'purple', 'pink']
+color_List = [
+    'rgba(255, 93, 94, 1)',
+    'rgba(255, 179, 1, 1)', 
+    'rgba(255, 126, 27, 1)', 
+    'rgba(47, 208, 70, 1)', 
+    'rgba(18, 160, 95, 1)', 
+    'rgba(153, 129, 255, 1)', 
+    'rgba(241, 121, 220, 1)', 
+    ]
 xpath_btn_color = {
     color_List[0] : '//*[@id="favoriteColor1"]',
     color_List[1] : '//*[@id="favoriteColor2"]',

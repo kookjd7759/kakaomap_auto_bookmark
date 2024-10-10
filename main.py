@@ -8,16 +8,11 @@ import sys
 import os
 
 import bookmark
+import db 
 
 ID_path = os.getcwd() + '\\kakaomap_auto_bookmark\\src\\ID.txt'
 PASS_path = os.getcwd() + '\\kakaomap_auto_bookmark\\src\\PASS.txt'
-
-def read(path):
-    with open(path, 'r') as file:
-        return file.read()
-def write(path, text):
-    with open(path, 'w') as file:
-        file.write(text)
+ico_path = os.getcwd() + '\\kakaomap_auto_bookmark\\src\\ico.png'
 
 def check_file(path):
     try:
@@ -48,10 +43,10 @@ class Window(QWidget):
     def __init__(self):
         super().__init__()
         self.UIinit()
-    
     def UIinit(self):
         self.setFixedSize(500, 340) 
         self.setWindowTitle('Kakaomap Auto Bookmarking')
+        self.setWindowIcon(QIcon(ico_path))
         grid = QGridLayout()
 
         self.gb_loginInfo = self.createGroup_loginInfo()
@@ -70,8 +65,8 @@ class Window(QWidget):
         hbox_ID_PASS = QHBoxLayout()
         lbl_ID = QLabel('ID : ', self)
         lbl_PASS = QLabel('Password : ', self)
-        self.line_ID = QLineEdit(read(ID_path), self)
-        self.line_PASS = QLineEdit(read(PASS_path), self)
+        self.line_ID = QLineEdit(db.read(ID_path), self)
+        self.line_PASS = QLineEdit(db.read(PASS_path), self)
         self.line_PASS.setEchoMode(QLineEdit.Password)
         self.line_ID.setEnabled(False)
         self.line_PASS.setEnabled(False)
@@ -126,16 +121,33 @@ class Window(QWidget):
         btn_start = QPushButton('Start', self)
         btn_start.clicked.connect(self.btn_start_function)
 
-        lbl_color = QLabel('Color', self)
-
-        self.cb_color = QComboBox(self)
-        for color in bookmark.color_List:
-            self.cb_color.addItem(str(color))
-        self.cb_color.setCurrentText(bookmark.color_List[0])
-
+        lbl_color = QLabel('BookMark Color     ', self)
+        
         hbox = QHBoxLayout()
         hbox.addWidget(lbl_color)
-        hbox.addWidget(self.cb_color)
+        self.radio_buttons = []
+        for color in bookmark.color_List:
+            radio_button = QRadioButton()
+            radio_button.setStyleSheet(f'''
+                QRadioButton::indicator {{
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 10px;
+                    background-color: {color};
+                }}
+                QRadioButton::indicator:checked {{
+                    width: 12px;
+                    height: 12px;
+                    border-radius: 10px;
+                    border: 4px solid {color};
+                    background-color: transparent;
+                }}
+            ''')
+            hbox.addWidget(radio_button)
+            self.radio_buttons.append(radio_button)
+
+            if color == bookmark.color_List[0]:
+                radio_button.setChecked(True)
 
         vbox = QVBoxLayout()
         vbox.addLayout(hbox)
@@ -160,13 +172,31 @@ class Window(QWidget):
         self.line_ID.setEnabled(False)
         self.line_PASS.setEnabled(False)
         self.line_PASS.setEchoMode(QLineEdit.Password)
-        write(ID_path, self.line_ID.text())
-        write(PASS_path, self.line_PASS.text())
+        db.write(ID_path, self.line_ID.text())
+        db.write(PASS_path, self.line_PASS.text())
     def btn_selectFile_function(self):
         fname = QFileDialog.getOpenFileName(self, '파일선택', '', 'AllFiles(*.xlsx *.xls)')
         self.update_filePath(fname[0])
     def btn_start_function(self):
-        bookmark.start(self.line_ID.text(), self.line_PASS.text(), color=self.cb_color.currentText(), filePath=self.line_filepath.text())
+        if self.start_check():
+            bookmark.start(self.line_ID.text(), self.line_PASS.text(), self.get_color(), self.line_filepath.text())
+
+    def start_check(self):
+        if self.line_ID.text() == '':
+            print(f'START ERROR::kakao ID is empty')
+            return False
+        elif self.line_PASS.text() == '':
+            print(f'START ERROR::kakao Password is empty')
+            return False
+        elif self.line_filepath.text() == '':
+            print(f'START ERROR::there is no file')
+            return False
+        return True
+
+    def get_color(self):
+        for i, radio_button in enumerate(self.radio_buttons):
+            if radio_button.isChecked():
+                return bookmark.color_List[i]
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
