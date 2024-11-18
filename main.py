@@ -3,7 +3,6 @@ from PyQt5.QtCore import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import pandas as pd
-import openpyxl
 import sys
 import os
 
