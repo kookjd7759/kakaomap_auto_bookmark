@@ -1,6 +1,7 @@
 import os
 
 setting_path = os.getcwd() + '\\kakaomap_auto_bookmark\\src\\setting.txt'
+
 def read(path):
     with open(path, 'r') as file:
         return file.read()
